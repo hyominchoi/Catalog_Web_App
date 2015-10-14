@@ -1,8 +1,14 @@
 # The original version of the script was provided by Udacity
+import os.path
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
 from database_setup import Category, Base, SupplyItem
+
+# Q: how do we make sure that we are not adding the same item in 
+# the existing database? Do we use "unique" key in db rather than the followng?
+# if os.path.isfile("catsupplies.db"):
+#	os.remove("catsupplies.db")
+#	print "existing db removed"
 
 engine = create_engine('sqlite:///catsupplies.db')
 # Bind the engine to the metadata of the Base class so that the
