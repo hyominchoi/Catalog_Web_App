@@ -24,28 +24,31 @@ class WebServerHandler(BaseHTTPRequestHandler):
                 message += "<body><html>"
                 # Get the list of categories
                 for line in session.query(Category).all():
-                    print line.name
-                    message += line.name + "<br><a href = '/edit'> edit </a><br><a href = '/delete'> delete </a><br>"
+                    message += line.name + "<br>"
+                    message += "<a href = '/edit'> edit </a><br>"
+                    message += "<a href = '/delete'> delete </a><br>"
                 # Create new category link
                 message += "<br><br><a href = '/new_category'> Make a new Category </a>"
                 message += "</body></html>"
                 self.wfile.write(message)
-                print message
                 return
+
+
             if self.path.endswith("/new_category"):
                 self.send_response(200)
                 self.send_header('Content-type', 'text/html')
                 self.end_headers()
                 message = ""
                 message += "<html><body>"
-                message += '''<form method='POST' enctype='multipart/form-data' action='/new_category'>
-                <h2>Add another category </h2><input name="message" type="text" >
-                <input type="submit" value="Submit"> </form>'''
+                message += "<h1> Make a new category </h1>"
+                message += "<form method= 'POST' enctype = 'multipart/form-data' action = '/new_category'>"
+                message += "<input name = 'newCategoryName' type = 'text' placeholder = 'New Category Name' >"
+                message += "<input type = 'submit' value = 'Create'>"
                 message += "<br><a href = '/catsupplies'> Go back </a>"
-                message += "</body></html>"
+                message += "</form></body></html>"
                 self.wfile.write(message)
-                print message
                 return 
+
         except IOError:
             self.send_error(404, 'File Not Found: %s' % self.path)
         
@@ -53,25 +56,25 @@ class WebServerHandler(BaseHTTPRequestHandler):
     # do_POST function displays a new message after a user enters new data
     def do_POST(self):
         try:
-            self.send_response(301)
-            self.send_header('Content-type', 'text/html')
-            self.end_headers()
-            ctype, pdict = cgi.parse_header(
-                self.headers.getheader('content-type'))
-            if ctype == 'multipart/form-data':
-                fields = cgi.parse_multipart(self.rfile, pdict)
-                messagecontent = fields.get('message')
-            output = ""
-            output += "<html><body>"
-            output += " <h2> Okay, how about this: </h2>"
-            output += "<h1> %s </h1>" % messagecontent[0]
-            output += '''<form method='POST' enctype='multipart/form-data' action='/hello'>
-            <h2>Do you want to add another one?</h2><input name="message" type="text" >
-            <input type="submit" value="Submit"> </form>'''
-            output += "<br><a href = '/catsupplies'> Go back </a>"
-            output += "</body></html>"
-            self.wfile.write(output)
-            print output
+            
+            if self.path.endswith("/new_category"):
+                ctype, pdict = cgi.parse_header(
+                    self.headers.getheader('content-type'))
+                if ctype == 'multipart/form-data':
+                    fields = cgi.parse_multipart(self.rfile, pdict)
+                    messagecontent = fields.get('newCategoryName')
+
+                    # Create new Category Object
+                    newCategory = Category(name=messagecontent[0])
+                    session.add(newCategory)
+                    session.commit()
+
+                    self.send_response(301)
+                    self.send_header('Content-type', 'text/html')
+                    self.send_header('Location', '/catsupplies')
+                    self.end_headers()
+
+
         except:
             pass
 
