@@ -2,7 +2,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from database_setup import Restaurant, Base, MenuItem
+from database_setup import Category, Base, SupplyItem
 
 engine = create_engine('sqlite:///catsupplies.db')
 # Bind the engine to the metadata of the Base class so that the
@@ -26,12 +26,12 @@ session.commit()
 
 category2 = Category(name="Treats")
 
-session.add(cateogry2)
+session.add(category2)
 session.commit()
 
 category3 = Category(name="Supplements")
 
-session.add(cateogry3)
+session.add(category3)
 session.commit()
 
 item1 = SupplyItem(name="Beef Liver Munchies", brand="Primal", price="$5",
@@ -63,7 +63,7 @@ session.commit()
 
 item5 = SupplyItem(name="Puka Luau Succulent Chicken in Chicken Consomme Canned Cat Food",
 				   brand="Tiki Cat", ingredients="Chicken 62%, Chicken Consomme 34%",
-				   category=category1)
+				   price="$20",category=category1)
 
 session.add(item5)
 session.commit()

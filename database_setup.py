@@ -21,7 +21,7 @@ class SupplyItem(Base):
 
     name = Column(String(100), nullable=False)
     id = Column(Integer, primary_key=True)
-    brand = Columns(String(30), nullable=False)
+    brand = Column(String(30), nullable=False)
     price = Column(String(8), nullable=False)
     grain_free = Column(Boolean)
     ingredients = Column(String(250))
