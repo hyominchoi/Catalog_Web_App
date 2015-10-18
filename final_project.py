@@ -13,35 +13,90 @@ session = DBSession()
 @app.route('/')
 @app.route('/catsupplies/')
 def listCategories():
-	return "List of categories"
+	categories = session.query(Category).all()
 
-@app.route('/catsupplies/new/')
+	return render_template('categories.html', categories = categories)
+
+
+@app.route('/catsupplies/new/', methods = ['GET', 'POST'])
 def newCategory():
-	return "Create a new category"
+	if request.method == 'POST':
+		if request.form['name']:
+			newCategory = Category(name = request.form['name'])
+			session.add(newCategory)
+			session.commit()
+			return redirect(url_for('listCategories'))
+	else:	
+		return render_template('newCategory.html')
 
-@app.route('/catsupplies/edit/')
+
+@app.route('/catsupplies/<int:category_id>/edit/', methods = ['GET', 'POST'])
 def editCategory(category_id):
-	return "Edit an existing category"
+	editedCategory = session.query(Category).filter_by(id = category_id).one()
+	if request.method == 'POST':
+		if request.form['name']:
+			editedCategory.name = request.form['name']
+		session.add(editedCategory)
+		session.commit()
+		return redirect(url_for('listCategories'))
+	else:
+		return render_template('editCategory.html', category_id = category_id, editedCategory = editedCategory)
 
-@app.route('/catsupplies/delete')
-def deleteCateogry(category_id):
-	return "Delete an existing category"
+@app.route('/catsupplies/<int:category_id>/delete', methods = ['GET', 'POST'])
+def deleteCategory(category_id):
+	deletedCategory = session.query(Category).filter_by(id = category_id).one()
+	if request.method == 'POST':
+		session.delete(deletedCategory)
+		session.commit()
+		return redirect(url_for('listCategories'))
+
+	else:
+		return render_template('deleteCategory.html', category_id = category_id, deletedCategory = deletedCategory)
+
 
 @app.route('/catsupplies/<int:category_id>/')
 def listSupplyItems(category_id):
-    return "List supply items of a category"
+    category = session.query(Category).filter_by(id=category_id).one()
+    items = session.query(SupplyItem).filter_by(category_id=category.id)
 
-@app.route('/catsupplies/<int:category_id>/new/')
+    return render_template('item.html', category = category, items = items)
+
+
+@app.route('/catsupplies/<int:category_id>/new/', methods = ['GET', 'POST'])
 def newSupplyItem(category_id):
-	return "Create a new supply item"
+	if request.method == 'POST':
+		newItem = SupplyItem(name = request.form['name'], brand = "brand", price = "$0", category_id = category_id)
+		session.add(newItem)
+		session.commit()
+		return redirect(url_for('listSupplyItems', category_id = category_id))
+	else:
+		return render_template('newSupplyItem.html', category_id = category_id)
 
-@app.route('/catsupplies/<int:category_id>/<int:item_id>/edit/')
+
+@app.route('/catsupplies/<int:category_id>/<int:item_id>/edit', methods = ['GET', 'POST'])
 def editSupplyItem(category_id, item_id):
-	return "Edit an existing supply item"
+	editedItem = session.query(SupplyItem).filter_by(id = item_id).one()
+	if request.method == 'POST':
+		if request.form['name']:
+			editedItem.name = request.form['name']
+		session.add(editedItem)
+		session.commit()
+		return redirect(url_for('listSupplyItems', category_id = category_id))
+	else:
+		return render_template('editSupplyItem.html', category_id = category_id, item_id = item_id, item = editedItem )
 
-@app.route('/catsupplies/<int:category_id>/<int:item_id>/delete/')
+
+@app.route('/catsupplies/<int:category_id>/<int:item_id>/delete/', methods = ['GET', 'POST'])
 def deleteSupplyItem(category_id, item_id):
-	return "Delete an existing supply item"
+	deletedItem = session.query(SupplyItem).filter_by(id = item_id).one()
+	if request.method == 'POST':
+		session.delete(deletedItem)
+		session.commit()
+		return redirect(url_for('listSupplyItems', category_id = category_id))
+	else:
+		return render_template('deleteSupplyItem.html', category_id = category_id, item_id = item_id, deletedItem = deletedItem)
+
+
 
 if __name__ == '__main__':
     app.debug = True

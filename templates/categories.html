@@ -1,0 +1,24 @@
+<html>
+
+<body>
+
+<h1>Cat Supplies</h1>
+
+<a href = '{{url_for('newCategory')}}'> Create a new item </a>
+
+{% for c in categories %}
+
+<div>
+</br>
+<a href = '{{url_for('listSupplyItems', category_id = c.id) }}' > {{c.name}} </a>
+</br>
+<a href = '{{url_for('editCategory', category_id = c.id) }}' > Edit </a>
+</br>
+<a href = '{{url_for('deleteCategory', category_id = c.id) }}' > Delete </a>
+</br>
+</div>
+
+{% endfor %}
+</body>
+
+</html>
