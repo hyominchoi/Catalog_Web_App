@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, request
+from flask import Flask, render_template, redirect, url_for, request, jsonify
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Category, SupplyItem
@@ -96,6 +96,20 @@ def deleteSupplyItem(category_id, item_id):
 	else:
 		return render_template('deleteSupplyItem.html', category_id = category_id, item_id = item_id, deletedItem = deletedItem)
 
+
+# ADD JSON API ENDPOINT
+
+@app.route('/catsupplies/items/JSON')
+def allItemsJSON():
+	items = session.query(SupplyItem).all()
+	return jsonify(SupplyItems = [i.serialize for i in items])
+	
+@app.route('/catsupplies/<int:category_id>/items/JSON')
+def supplyItemJSON(category_id):
+    category = session.query(Category).filter_by(id = category_id).one()
+    items = session.query(SupplyItem).filter_by(
+        category_id = category_id).all()
+    return jsonify(SupplyItems = [i.serialize for i in items])
 
 
 if __name__ == '__main__':

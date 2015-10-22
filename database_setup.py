@@ -28,6 +28,19 @@ class SupplyItem(Base):
     category_id = Column(Integer, ForeignKey('category.id'))
     category = relationship(Category)
 
+# Add serialize function to be able to send JSON objects in a
+# serializable format
+
+    @property
+    def serialize(self):
+        return {
+            'name': self.name,
+            'ingredients': self.ingredients,
+            'id': self.id,
+            'price': self.price,
+            'brand': self.brand,
+            'gran_free': self.grain_free,
+        }
 
 engine = create_engine('sqlite:///catsupplies.db')
 
