@@ -5,29 +5,37 @@
 	</head>
 	
 <body>
+	<h1>{{category.name}}</h1>
 
-<h1>{{category.name}}</h1>
-<div class="pane">
+		<!--MESSAGE FLASHING -->
+		{% with messages = get_flashed_messages()%}
 
-{% for i in items %}
+			{% if messages %}
+			<p class = "flash">
+			{% for message in messages %}
+			{{message}} 
+			{% endfor %}
+			</p>
+			{% endif %}
+		{% endwith %}
+	</br>
+	
+	<div class="pane">
+		{% for i in items %}
 
-<p class="name">{{i.name}} </p> 
-<p class="price"> {{i.price}} </p> 
-<p class="ingredients"> {{i.ingredients}} 
-<a href = '{{url_for('editSupplyItem', category_id = category.id, item_id = i.id) }}' > Edit </a> | 
-<a href = '{{url_for('deleteSupplyItem', category_id = category.id, item_id = i.id ) }}' > Delete </a>
-</p>
-</br>
+		<p class = "name">{{i.name}} </p> 
+		<p class = "price"> {{i.price}} </p> 
+		<p class = "ingredients"> {{i.ingredients}} 
+		<a href = '{{url_for('editSupplyItem', category_id = category.id, item_id = i.id) }}' > Edit </a> | 
+		<a href = '{{url_for('deleteSupplyItem', category_id = category.id, item_id = i.id ) }}' > Delete </a>
+		</p>
+		</br>
 
 
-{% endfor %}
-</br></br>
+		{% endfor %}
+		</br></br>
 
-<a href = '{{url_for('newSupplyItem', category_id = category.id ) }}' > Create a new item </a> | <a href = '{{url_for('listCategories')}}'> Go back </a>
-
-
-</div>
-
+		<a href = '{{url_for('newSupplyItem', category_id = category.id ) }}' > Create a new item </a> | <a href = '{{url_for('listCategories')}}'> Go back </a>
+	</div>
 </body>
-
 </html>

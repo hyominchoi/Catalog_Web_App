@@ -5,24 +5,19 @@
 	
 <body>
 
-<h1>New Supply Item</h1>
+	<h1>New Supply Item</h1>
 
-<form action = '{{url_for('newSupplyItem', category_id = category_id) }}' method = 'post'>
-</br>
-</br>
-
-<b> Name:</b>
+	<form action = '{{url_for('newSupplyItem', category_id = category_id) }}' method = 'post'>
+	</br></br>
+	<b> Name:</b>
 	<input type = 'text' size='30' name='name' placeholder = 'Create new item'>
-<b> Price: </b>	
+	<b> Price: </b>	
 	<input type = 'integer' size='10' name='price' placeholder = 'Price'>
 	<input type = 'submit' value='Create'>
+	</form>
 
-
-
-</form>
-</br>
-<a href = '{{url_for('listSupplyItems', category_id = category_id)}}'> Cancel </a>
-
+	</br>
+	<a href = '{{url_for('listSupplyItems', category_id = category_id)}}'> Cancel </a>
+	
 </body>
-
 </html>

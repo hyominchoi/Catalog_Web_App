@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, request, jsonify
+from flask import Flask, render_template, redirect, url_for, request, jsonify, flash
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Category, SupplyItem
@@ -25,6 +25,7 @@ def newCategory():
 			newCategory = Category(name = request.form['name'])
 			session.add(newCategory)
 			session.commit()
+			flash("New category created!")
 			return redirect(url_for('listCategories'))
 	else:	
 		return render_template('newCategory.html')
@@ -38,6 +39,7 @@ def editCategory(category_id):
 			editedCategory.name = request.form['name']
 		session.add(editedCategory)
 		session.commit()
+		flash("Category Edited!")
 		return redirect(url_for('listCategories'))
 	else:
 		return render_template('editCategory.html', category_id = category_id, editedCategory = editedCategory)
@@ -48,6 +50,7 @@ def deleteCategory(category_id):
 	if request.method == 'POST':
 		session.delete(deletedCategory)
 		session.commit()
+		flash("Category Deleted!")
 		return redirect(url_for('listCategories'))
 
 	else:
@@ -68,6 +71,7 @@ def newSupplyItem(category_id):
 		newItem = SupplyItem(name = request.form['name'], brand = "brand", price = "$"+request.form['price'], category_id = category_id)
 		session.add(newItem)
 		session.commit()
+		flash("New item created!")
 		return redirect(url_for('listSupplyItems', category_id = category_id))
 	else:
 		return render_template('newSupplyItem.html', category_id = category_id)
@@ -85,6 +89,7 @@ def editSupplyItem(category_id, item_id):
 			editedItem.price = request.form['price']
 		session.add(editedItem)
 		session.commit()
+		flash("Item Edited!")
 		return redirect(url_for('listSupplyItems', category_id = category_id))
 	else:
 		return render_template('editSupplyItem.html', category_id = category_id, item_id = item_id, item = editedItem )
@@ -96,6 +101,7 @@ def deleteSupplyItem(category_id, item_id):
 	if request.method == 'POST':
 		session.delete(deletedItem)
 		session.commit()
+		flash("Item Deleted!")
 		return redirect(url_for('listSupplyItems', category_id = category_id))
 	else:
 		return render_template('deleteSupplyItem.html', category_id = category_id, item_id = item_id, deletedItem = deletedItem)
@@ -117,5 +123,6 @@ def supplyItemJSON(category_id):
 
 
 if __name__ == '__main__':
-    app.debug = True
-    app.run(host='0.0.0.0', port=5000)
+	app.secret_key = 'super_secret_key'
+	app.debug = True
+	app.run(host='0.0.0.0', port=5000)

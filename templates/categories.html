@@ -6,29 +6,37 @@
 	
 <body>
 
-<h1>Cat Supplies</h1>
-</br></br>
-<div class="pane">
-{% for c in categories %}
+	<h1>Cat Supplies</h1>
 
-<div>
-</br>
-<h2><a href = '{{url_for('listSupplyItems', category_id = c.id) }}' > {{c.name}} </a></h2>
-<a href = '{{url_for('editCategory', category_id = c.id) }}' > Edit </a> |
-<a href = '{{url_for('deleteCategory', category_id = c.id) }}' > Delete </a>
-</br>
-</div>
+		<!--MESSAGE FLASHING -->
+		{% with messages = get_flashed_messages()%}
 
-{% endfor %}
+			{% if messages %}
+			<p class = "flash">
+			{% for message in messages %}
+			{{message}} 
+			{% endfor %}
+			</p>
+			{% endif %}
+		{% endwith %}
+	</br>
+	<div class="pane">
+		{% for c in categories %}
 
+		<div>
+			</br>
+			<h2><a href = '{{url_for('listSupplyItems', category_id = c.id) }}' > {{c.name}} </a></h2>
+			<a href = '{{url_for('editCategory', category_id = c.id) }}' > Edit </a> |
+			<a href = '{{url_for('deleteCategory', category_id = c.id) }}' > Delete </a>
+			</br>
+		</div>
 
-</br>
-</br>
-<a href = '{{url_for('newCategory')}}'> Create a new category</a>
-</br></br>
+		{% endfor %}
 
-</div>
+		</br></br>
+		<a href = '{{url_for('newCategory')}}'> Create a new category</a>
+		</br></br>
 
+	</div>
 </body>
-
 </html>
