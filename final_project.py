@@ -65,7 +65,7 @@ def listSupplyItems(category_id):
 @app.route('/catsupplies/<int:category_id>/new/', methods = ['GET', 'POST'])
 def newSupplyItem(category_id):
 	if request.method == 'POST':
-		newItem = SupplyItem(name = request.form['name'], brand = "brand", price = "$0", category_id = category_id)
+		newItem = SupplyItem(name = request.form['name'], brand = "brand", price = "$"+request.form['price'], category_id = category_id)
 		session.add(newItem)
 		session.commit()
 		return redirect(url_for('listSupplyItems', category_id = category_id))
@@ -79,6 +79,10 @@ def editSupplyItem(category_id, item_id):
 	if request.method == 'POST':
 		if request.form['name']:
 			editedItem.name = request.form['name']
+		if request.form['ingredients']:
+			editedItem.ingredients = request.form['ingredients']
+		if request.form['price']:
+			editedItem.price = request.form['price']
 		session.add(editedItem)
 		session.commit()
 		return redirect(url_for('listSupplyItems', category_id = category_id))

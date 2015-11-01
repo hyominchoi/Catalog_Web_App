@@ -1,24 +1,34 @@
 <html>
 
+<head>
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='styles.css') }}">
+	</head>
+	
 <body>
 
 <h1>Cat Supplies</h1>
-
-<a href = '{{url_for('newCategory')}}'> Create a new item </a>
-
+</br></br>
+<div class="pane">
 {% for c in categories %}
 
 <div>
 </br>
-<a href = '{{url_for('listSupplyItems', category_id = c.id) }}' > {{c.name}} </a>
-</br>
-<a href = '{{url_for('editCategory', category_id = c.id) }}' > Edit </a>
-</br>
+<h2><a href = '{{url_for('listSupplyItems', category_id = c.id) }}' > {{c.name}} </a></h2>
+<a href = '{{url_for('editCategory', category_id = c.id) }}' > Edit </a> |
 <a href = '{{url_for('deleteCategory', category_id = c.id) }}' > Delete </a>
 </br>
 </div>
 
 {% endfor %}
+
+
+</br>
+</br>
+<a href = '{{url_for('newCategory')}}'> Create a new category</a>
+</br></br>
+
+</div>
+
 </body>
 
 </html>
