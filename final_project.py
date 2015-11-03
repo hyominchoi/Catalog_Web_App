@@ -14,10 +14,7 @@ import httplib2
 import json
 from flask import make_response
 import requests
-proxy_info = httplib2.proxy_info_from_environment()
-if proxy_info:
-    proxy_info.proxy_rdns = True
-http = httplib2.Http(proxy_info=proxy_info)
+
 
 app = Flask(__name__)
 
@@ -93,7 +90,7 @@ def gconnect():
         return response
 
     # Store the access token in the session for later use.
-    login_session['credentials'] = credentials
+    login_session['credentials'] = credentials.access_token
     login_session['gplus_id'] = gplus_id
 
     # Get user info
