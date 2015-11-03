@@ -14,6 +14,10 @@ import httplib2
 import json
 from flask import make_response
 import requests
+proxy_info = httplib2.proxy_info_from_environment()
+if proxy_info:
+    proxy_info.proxy_rdns = True
+http = httplib2.Http(proxy_info=proxy_info)
 
 app = Flask(__name__)
 
