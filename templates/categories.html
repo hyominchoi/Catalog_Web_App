@@ -1,12 +1,20 @@
 <html>
-
+<script src="https://apis.google.com/js/platform.js" async defer></script>
 <head>
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='styles.css') }}">
+
 	</head>
 	
 <body>
 
 	<h1>Cat Supplies</h1>
+	<div class="header" > 
+		{% if not name %}
+    	<a href= '{{ url_for('showLogin') }}'> <img src = "{{url_for('static',filename='btn_google+_signin_light_disabled_web.png')}}" > </a>
+  		{% else %}
+  		<a href="{{url_for('gdisconnect')}}">Sign out</a>
+ 		 {% endif %}
+	    </div>
 
 		<!--MESSAGE FLASHING -->
 		{% with messages = get_flashed_messages()%}

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, request, jsonify, flash
+from flask import Flask, render_template, redirect, url_for, request, jsonify, flash, g
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Category, SupplyItem
@@ -14,7 +14,8 @@ import httplib2
 import json
 from flask import make_response
 import requests
-
+# IMPORTS FOR DECORATOR
+from functools import wraps
 
 app = Flask(__name__)
 
@@ -110,7 +111,7 @@ def gconnect():
     output += '!</h1>'
     output += '<img src="'
     output += login_session['picture']
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+    output += ' " style = "width: 300px; height: 300px; border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
     flash("you are now logged in as %s" % login_session['username'])
     print "done!"
     return output
@@ -125,7 +126,7 @@ def gdisconnect():
             json.dumps('Current user not connected.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
-    access_token = credentials.access_token
+    access_token = credentials
     url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % access_token
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
@@ -140,74 +141,88 @@ def gdisconnect():
 
         response = make_response(json.dumps('Successfully disconnected.'), 200)
         response.headers['Content-Type'] = 'application/json'
-        return response
+        flash("logged out")
+        return redirect(url_for('listCategories'))
     else:
         # For whatever reason, the given token was invalid.
         response = make_response(
             json.dumps('Failed to revoke token for given user.', 400))
         response.headers['Content-Type'] = 'application/json'
-        return response
+        flash("log out failed")
+        return redirect(url_for('listCategories'))
 
 
+# DECORATOR FUNCTION FOR LOGIN REQUIREMENT. REDIRECT TO LOGIN PAGE
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if login_session['username'] is None:
+            return redirect(url_for('showLogin', next=request.url))
+        return f(*args, **kwargs)
+    return decorated_function
 
+# CONNECT TO THE DATABASE - catsupplies
 engine = create_engine('sqlite:///catsupplies.db')
 Base.metadata.bind = engine
 
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
+# FLASK FRAMEWORKS -- CREATING WEB PAGES
 @app.route('/')
+
+# MAIN PAGE GENERATOR -- SHOWS CATEGORIES OF SUPPLIES
 @app.route('/catsupplies/')
 def listCategories():
-	categories = session.query(Category).all()
+    categories = session.query(Category).all()
 
-	return render_template('categories.html', categories = categories)
+    return render_template('categories.html', categories = categories, name = login_session['username'])
 
-
+# PAGE FOR CREATING A NEW CATEGORY. REQUIRES LOGIN
 @app.route('/catsupplies/new/', methods = ['GET', 'POST'])
+@login_required
 def newCategory():
-    if 'username' not in login_session:
-        return redirect('/login')
-	if request.method == 'POST':
-		if request.form['name']:
-			newCategory = Category(name = request.form['name'])
-			session.add(newCategory)
-			session.commit()
-			flash("New category created!")
-			return redirect(url_for('listCategories'))
-	else:	
-		return render_template('newCategory.html')
+    if request.method == 'POST':
+        if request.form['name']:
+            newCategory = Category(name = request.form['name'])
+            session.add(newCategory)
+            session.commit()
+            flash("New category created!")
+            return redirect(url_for('listCategories'))
+    else:   
+        return render_template('newCategory.html')
 
-
+# PAGE FOR EDITING AN EXISTING CATEGORY. REQUIRES LOGIN
 @app.route('/catsupplies/<int:category_id>/edit/', methods = ['GET', 'POST'])
+@login_required
 def editCategory(category_id):
-    if 'username' not in login_session:
-        return redirect('/login')
     editedCategory = session.query(Category).filter_by(id = category_id).one()
     if request.method == 'POST':
-		if request.form['name']:
-			editedCategory.name = request.form['name']
-		session.add(editedCategory)
-		session.commit()
-		flash("Category Edited!")
-		return redirect(url_for('listCategories'))
+        if request.form['name']:
+            editedCategory.name = request.form['name']
+        session.add(editedCategory)
+        session.commit()
+        flash("Category Edited!")
+        return redirect(url_for('listCategories'))
     else:
-		return render_template('editCategory.html', category_id = category_id, editedCategory = editedCategory)
+        return render_template('editCategory.html', 
+                    category_id = category_id, editedCategory = editedCategory)
 
+# PAGE FOR DELETING AN EXISTING CATEGORY. REQUIRES LOGIN
 @app.route('/catsupplies/<int:category_id>/delete', methods = ['GET', 'POST'])
+@login_required
 def deleteCategory(category_id):
-    if 'username' not in login_session:
-        return redirect('/login')
     deletedCategory = session.query(Category).filter_by(id = category_id).one()
     if request.method == 'POST':
-		session.delete(deletedCategory)
-		session.commit()
-		flash("Category Deleted!")
-		return redirect(url_for('listCategories'))
+        session.delete(deletedCategory)
+        session.commit()
+        flash("Category Deleted!")
+        return redirect(url_for('listCategories'))
     else:
-		return render_template('deleteCategory.html', category_id = category_id, deletedCategory = deletedCategory)
+        return render_template('deleteCategory.html', 
+               category_id = category_id, deletedCategory = deletedCategory)
 
-
+# GENERATING PAGE FOR EACH CATEGORY -- LIST ALL THE SUPPLY ITEMS
 @app.route('/catsupplies/<int:category_id>/')
 def listSupplyItems(category_id):
     category = session.query(Category).filter_by(id=category_id).one()
@@ -215,62 +230,65 @@ def listSupplyItems(category_id):
 
     return render_template('item.html', category = category, items = items)
 
-
+# PAGE FORE CREATING A NEW SUPPLY ITEM GIVEN A CATEGORY. LOGIN REQUIRED
 @app.route('/catsupplies/<int:category_id>/new/', methods = ['GET', 'POST'])
+@login_required
 def newSupplyItem(category_id):
-    if 'username' not in login_session:
-        return redirect('/login')
     if request.method == 'POST':
-		newItem = SupplyItem(name = request.form['name'], brand = "brand", price = "$"+request.form['price'], category_id = category_id)
-		session.add(newItem)
-		session.commit()
-		flash("New item created!")
-		return redirect(url_for('listSupplyItems', category_id = category_id))
+        newItem = SupplyItem(name = request.form['name'], brand = "brand", 
+            price = "$"+request.form['price'], category_id = category_id)
+        session.add(newItem)
+        session.commit()
+        flash("New item created!")
+        return redirect(url_for('listSupplyItems', category_id = category_id))
     else:
-		return render_template('newSupplyItem.html', category_id = category_id)
+        return render_template('newSupplyItem.html', category_id = category_id)
 
-
-@app.route('/catsupplies/<int:category_id>/<int:item_id>/edit', methods = ['GET', 'POST'])
+# PAGE FOR EDITING AN EXISTING SUPPLY ITEM GIVEN A CATEGORY. 
+# LOGIN REQUIRED
+@app.route('/catsupplies/<int:category_id>/<int:item_id>/edit', 
+           methods = ['GET', 'POST'])
+@login_required
 def editSupplyItem(category_id, item_id):
-    if 'username' not in login_sesion:
-        return redirect('/login')
     editedItem = session.query(SupplyItem).filter_by(id = item_id).one()
     if request.method == 'POST':
-		if request.form['name']:
-			editedItem.name = request.form['name']
-		if request.form['ingredients']:
-			editedItem.ingredients = request.form['ingredients']
-		if request.form['price']:
-			editedItem.price = request.form['price']
-		session.add(editedItem)
-		session.commit()
-		flash("Item Edited!")
-		return redirect(url_for('listSupplyItems', category_id = category_id))
+        if request.form['name']:
+            editedItem.name = request.form['name']
+        if request.form['ingredients']:
+            editedItem.ingredients = request.form['ingredients']
+        if request.form['price']:
+            editedItem.price = request.form['price']
+        session.add(editedItem)
+        session.commit()
+        flash("Item Edited!")
+        return redirect(url_for('listSupplyItems', category_id = category_id))
     else:
-		return render_template('editSupplyItem.html', category_id = category_id, item_id = item_id, item = editedItem )
+        return render_template('editSupplyItem.html', 
+            category_id = category_id, item_id = item_id, item = editedItem )
 
-
-@app.route('/catsupplies/<int:category_id>/<int:item_id>/delete/', methods = ['GET', 'POST'])
+# PAGE FOR DELETING AN EXISTING SUPPLY ITEM GIVEN A CATEGORY.
+# LOGIN REQUIRED
+@app.route('/catsupplies/<int:category_id>/<int:item_id>/delete/', 
+           methods = ['GET', 'POST'])
+@login_required
 def deleteSupplyItem(category_id, item_id):
-    if 'username' not in login_session:
-        return redirect('/login')
     deletedItem = session.query(SupplyItem).filter_by(id = item_id).one()
     if request.method == 'POST':
-		session.delete(deletedItem)
-		session.commit()
-		flash("Item Deleted!")
-		return redirect(url_for('listSupplyItems', category_id = category_id))
+        session.delete(deletedItem)
+        session.commit()
+        flash("Item Deleted!")
+        return redirect(url_for('listSupplyItems', category_id = category_id))
     else:
-		return render_template('deleteSupplyItem.html', category_id = category_id, item_id = item_id, deletedItem = deletedItem)
+        return render_template('deleteSupplyItem.html', 
+            category_id = category_id, item_id = item_id, deletedItem = deletedItem)
 
 
 # ADD JSON API ENDPOINT
-
 @app.route('/catsupplies/items/JSON')
 def allItemsJSON():
-	items = session.query(SupplyItem).all()
-	return jsonify(SupplyItems = [i.serialize for i in items])
-	
+    items = session.query(SupplyItem).all()
+    return jsonify(SupplyItems = [i.serialize for i in items])
+    
 @app.route('/catsupplies/<int:category_id>/items/JSON')
 def supplyItemJSON(category_id):
     category = session.query(Category).filter_by(id = category_id).one()
@@ -280,6 +298,6 @@ def supplyItemJSON(category_id):
 
 
 if __name__ == '__main__':
-	app.secret_key = 'super_secret_key'
-	app.debug = True
-	app.run(host='0.0.0.0', port=5000)
+    app.secret_key = 'super_secret_key'
+    app.debug = True
+    app.run(host='0.0.0.0', port=5000)

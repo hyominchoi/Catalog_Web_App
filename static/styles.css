@@ -1,20 +1,47 @@
-body            { font-family: sans-serif; background-color: #A38D7A; text-align: center; }
+body {
+	font-family: sans-serif; 
+	background-color: #A38D7A; 
+	text-align: center; 
+}
 
-h1         { color: #C0D5BE; font-family: 'Georgia',sans-serif; margin: 0; padding:10; border-bottom: 2px solid #1E4103; text-shadow: 3px 3px #1E4103; }
+h1 { 
+ 
+	color: #C0D5BE; 
+	font-family: 'Georgia',sans-serif; 
+	margin: 0; padding:10; 
+	border-bottom: 2px solid #1E4103; 
+	text-shadow: 3px 3px #1E4103; 
+}
 
-h2              { font-size: 1.2em; }
-h3				{ font-size: 1em;}
+h2 { 
+	font-size: 1.2em; 
+}
+h3 { 
+	font-size: 1em;
+}
 
-
-a {text-decoration:none; color:#3C423B; font-size: .75em;}
+a {
+	text-decoration:none; color:#3C423B; 
+	font-size: .75em;
+}
 a:hover {
 	text-decoration: underline;
 }
+.header {
+	display: inline-block; 
+	float:right;
+}
 
+.pane {
+	position:absolute; 
+	left: 25%; 
+	right: 25%; 
+	border: 2px solid;
+    border-radius: 25px; 
+    padding: 5px; margin: 5px; 
+    border-color: #1E4103; 
+    background-color: #C8BBB0;}
 
-.pane {position:absolute; left: 25%; right: 25%; border: 2px solid;
-    border-radius: 25px; padding: 5px; margin: 5px; border-color: #1E4103; background-color: #C8BBB0;}
-.header         {left:50%; text-align: center;}
 
 .name {width:45%; float: left; text-align:left; padding-left:5%;}
 .price {width:45%; text-align: right; display: inline-block; float:right;  padding-right:5%;}

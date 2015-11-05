@@ -49,7 +49,7 @@ function signInCallback(authResult) {
         if (result) {
           $('#result').html('Login Successful!</br>'+ result + '</br>Redirecting...')
          setTimeout(function() {
-          window.location.href = "/catsupplies";
+          window.location.href = "/catsupplies/";
          }, 4000);
           
       } else if (authResult['error']) {
