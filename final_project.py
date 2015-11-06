@@ -1,5 +1,7 @@
 # IMPORTS FOR FLASK FRAME WORKS
-from flask import Flask, render_template, redirect, url_for, request, jsonify, flash
+from flask import Flask, render_template, redirect, url_for, request, flash
+# IMPORTS FOR API ENDPOINTS
+from flask import jsonify
 # IMPORTS FOR DATABASE
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -25,12 +27,13 @@ CLIENT_ID = json.loads(
     open('client_secrets.json', 'r').read())['web']['client_id']
 APPLICATION_NAME = "Cat Supplies Catalog App"
 
+
 # Create anti-forgery state token
 @app.route('/login')
 def showLogin():
-    """ 
+    """
     This function creates random string for login, state token.
-    The variable is stored in login_session dictionary. 
+    The variable is stored in login_session dictionary.
 
     """
 
@@ -49,7 +52,7 @@ def gconnect():
     if everything is validated then proceed to successful login.
 
     """
-    
+
     # Validate state token
     if request.args.get('state') != login_session['state']:
         response = make_response(json.dumps('Invalid state parameter.'), 401)
@@ -101,8 +104,8 @@ def gconnect():
     stored_credentials = login_session.get('credentials')
     stored_gplus_id = login_session.get('gplus_id')
     if stored_credentials is not None and gplus_id == stored_gplus_id:
-        response = make_response(json.dumps('Current user is already connected.'),
-                                 200)
+        response = make_response(
+            json.dumps('Current user is already connected.'), 200)
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -137,6 +140,7 @@ def gconnect():
     flash("you are now logged in as %s" % login_session['username'])
     return output
 
+
 def createUser(login_session):
     """
     This creates a new user account given a login_session dictionary.
@@ -153,26 +157,35 @@ def createUser(login_session):
 
 
 def getUserInfo(user_id):
+    """
+    Given a user_id, returns entire user info from the database
+    Input: user_id integer
+    Output: user object from the database
+    """
     user = session.query(User).filter_by(id=user_id).one()
     return user
 
 
 def getUserID(email):
+    """
+    Give an email, returns user.id found in the database
+    """
     try:
         user = session.query(User).filter_by(email=email).one()
         return user.id
     except:
         return None
 
+
 # DISCONNECT - Revoke a current user's token and reset their login_session
 @app.route('/gdisconnect')
 def gdisconnect():
-    """ 
+    """
     This function enables a user to logout from the web app.
-    After logout, the user is redirected to the main page 
+    After logout, the user is redirected to the main page
     and will see a flash message.
     """
-        # Only disconnect a connected user.
+    # Only disconnect a connected user.
     credentials = login_session.get('credentials')
     if credentials is None:
         response = make_response(
@@ -210,7 +223,7 @@ def gdisconnect():
 # DECORATOR FUNCTION FOR LOGIN REQUIREMENT. REDIRECT TO LOGIN PAGE
 def login_required(f):
     """
-    Decorator function -- check login status and redirect to login page. 
+    Decorator function -- check login status and redirect to login page.
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -219,6 +232,7 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
 # CONNECT TO THE DATABASE - catsupplies
 engine = create_engine('sqlite:///catsupplies.db')
 Base.metadata.bind = engine
@@ -226,9 +240,9 @@ Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
+
 # FLASK FRAMEWORKS -- CREATING WEB PAGES
 @app.route('/')
-
 # MAIN PAGE GENERATOR -- SHOWS CATEGORIES OF SUPPLIES
 @app.route('/catsupplies/')
 def listCategories():
@@ -238,40 +252,43 @@ def listCategories():
     """
     categories = session.query(Category).all()
     if 'username' not in login_session:
-        return render_template('public_categories.html', categories = categories,
-                                login_session = login_session)
+        return render_template('public_categories.html', categories=categories,
+                               login_session=login_session)
     else:
-        return render_template('categories.html', categories = categories, 
-                                login_session = login_session)
+        return render_template('categories.html', categories=categories,
+                               login_session=login_session)
+
 
 # PAGE FOR CREATING A NEW CATEGORY. REQUIRES LOGIN
-@app.route('/catsupplies/new/', methods = ['GET', 'POST'])
+@app.route('/catsupplies/new/', methods=['GET', 'POST'])
 @login_required
 def newCategory():
     """
-    This function lets a logged-in user generate a new category and saves to 
-    the database catsupplies.db. 
+    This function lets a logged-in user generate a new category and saves to
+    the database catsupplies.db.
     """
 
     if request.method == 'POST':
         if request.form['name']:
-            newCategory = Category(name = request.form['name'], user_id = login_session['user_id'])
+            newCategory = Category(name=request.form['name'],
+                                   user_id=login_session['user_id'])
             session.add(newCategory)
             session.commit()
             flash("New category created!")
             return redirect(url_for('listCategories'))
-    else:   
+    else:
         return render_template('newCategory.html')
 
+
 # PAGE FOR EDITING AN EXISTING CATEGORY CREATED BY THE LOGGED IN USER.
-@app.route('/catsupplies/<int:category_id>/edit/', methods = ['GET', 'POST'])
+@app.route('/catsupplies/<int:category_id>/edit/', methods=['GET', 'POST'])
 @login_required
 def editCategory(category_id):
     """
-    This function lets a logged-in user edit an existing category and 
-    saves changes to the database catsupplies.db. 
+    This function lets a logged-in user edit an existing category and
+    saves changes to the database catsupplies.db.
     """
-    editedCategory = session.query(Category).filter_by(id = category_id).one()
+    editedCategory = session.query(Category).filter_by(id=category_id).one()
     if editedCategory.user_id != login_session['user_id']:
         return "<script>function myFunction() {alert('You are not authorized to edit this categroy. Please create your own category in order to edit.');}</script><body onload='myFunction()''>"
     if request.method == 'POST':
@@ -282,18 +299,22 @@ def editCategory(category_id):
         flash("Category Edited!")
         return redirect(url_for('listCategories'))
     else:
-        return render_template('editCategory.html', 
-                    category_id = category_id, editedCategory = editedCategory)
+        return render_template(
+            'editCategory.html',
+            category_id=category_id,
+            editedCategory=editedCategory
+            )
+
 
 # PAGE FOR DELETING AN EXISTING CATEGORY. REQUIRES LOGIN
-@app.route('/catsupplies/<int:category_id>/delete', methods = ['GET', 'POST'])
+@app.route('/catsupplies/<int:category_id>/delete', methods=['GET', 'POST'])
 @login_required
 def deleteCategory(category_id):
     """
-    This function lets a logged-in user delete an existing category and 
-    saves changes to the database catsupplies.db. 
+    This function lets a logged-in user delete an existing category and
+    saves changes to the database catsupplies.db.
     """
-    CategoryToDelete = session.query(Category).filter_by(id = category_id).one()
+    CategoryToDelete = session.query(Category).filter_by(id=category_id).one()
     if CategoryToDelete.user_id != login_session[user_id]:
         return "<script>function myFunction() {alert('You are not authorized to delete this category. Please create your own category in order to delete.');}</script><body onload='myFunction()''>"
     if request.method == 'POST':
@@ -302,8 +323,12 @@ def deleteCategory(category_id):
         flash("Category Deleted!")
         return redirect(url_for('listCategories'))
     else:
-        return render_template('deleteCategory.html', 
-               category_id = category_id, deletedCategory = CategoryToDelete)
+        return render_template(
+            'deleteCategory.html',
+            category_id=category_id,
+            deletedCategory=CategoryToDelete
+            )
+
 
 # GENERATING PAGE FOR EACH CATEGORY -- LIST ALL THE SUPPLY ITEMS
 @app.route('/catsupplies/<int:category_id>/')
@@ -316,48 +341,64 @@ def listSupplyItems(category_id):
     creator = getUserInfo(category.user_id)
     items = session.query(SupplyItem).filter_by(category_id=category.id)
     if 'username' not in login_session or creator.id != login_session['user_id']:
-        return render_template('public_item.html', category = category, 
-            items=items, creator=creator, login_session = login_session)
-    else: 
-        return render_template('item.html', category = category, 
-            items = items, creator=creator, login_session = login_session)
+        return render_template(
+            'public_item.html',
+            category=category,
+            items=items,
+            creator=creator,
+            login_session=login_session
+            )
+    else:
+        return render_template(
+            'item.html',
+            category=category,
+            items=items,
+            creator=creator,
+            login_session=login_session
+            )
+
 
 # PAGE FORE CREATING A NEW SUPPLY ITEM GIVEN A CATEGORY. LOGIN REQUIRED
-@app.route('/catsupplies/<int:category_id>/new/', methods = ['GET', 'POST'])
+@app.route('/catsupplies/<int:category_id>/new/', methods=['GET', 'POST'])
 @login_required
 def newSupplyItem(category_id):
     """
-    This function lets a logged-in user create a new item given 
-    a category and saves changes to the database catsupplies.db. 
+    This function lets a logged-in user create a new item given
+    a category and saves changes to the database catsupplies.db.
     Input : category_id
     """
-    category = session.query(Category).filter_by(id = category_id).one()
+    category = session.query(Category).filter_by(id=category_id).one()
     if login_session['user_id'] != category.user_id:
         return "<script>function myFunction() {alert('You are not authorized to add supply items to this category. Please create your own category in order to add items.');}</script><body onload='myFunction()''>"
     if request.method == 'POST':
-        newItem = SupplyItem(name = request.form['name'], brand = "brand", 
-            price = "$"+request.form['price'], category_id = category_id,
-            user_id = category.user_id)
+        newItem = SupplyItem(
+            name=request.form['name'],
+            brand="brand",
+            price="$"+request.form['price'],
+            category_id=category_id,
+            user_id=category.user_id
+            )
         session.add(newItem)
         session.commit()
         flash("New item created!")
-        return redirect(url_for('listSupplyItems', category_id = category_id))
+        return redirect(url_for('listSupplyItems', category_id=category_id))
     else:
-        return render_template('newSupplyItem.html', category_id = category_id)
+        return render_template('newSupplyItem.html', category_id=category_id)
 
-# PAGE FOR EDITING AN EXISTING SUPPLY ITEM GIVEN A CATEGORY. 
+
+# PAGE FOR EDITING AN EXISTING SUPPLY ITEM GIVEN A CATEGORY.
 # LOGIN REQUIRED
-@app.route('/catsupplies/<int:category_id>/<int:item_id>/edit', 
-           methods = ['GET', 'POST'])
+@app.route('/catsupplies/<int:category_id>/<int:item_id>/edit',
+           methods=['GET', 'POST'])
 @login_required
 def editSupplyItem(category_id, item_id):
     """
-    This function lets a logged-in user edit an existing item given 
-    a category and saves changes to the database catsupplies.db. 
-    Input : category_id and item_id 
+    This function lets a logged-in user edit an existing item given
+    a category and saves changes to the database catsupplies.db.
+    Input : category_id and item_id
     """
-    category = session.query(Category).filter_by(id = category_id).one()
-    editedItem = session.query(SupplyItem).filter_by(id = item_id).one()
+    category = session.query(Category).filter_by(id=category_id).one()
+    editedItem = session.query(SupplyItem).filter_by(id=item_id).one()
     if login_session['user_id'] != category.user_id:
         return "<script>function myFunction() {alert('You are not authorized to edit supply items to this category.');}</script><body onload='myFunction()''>"
     if request.method == 'POST':
@@ -370,47 +411,57 @@ def editSupplyItem(category_id, item_id):
         session.add(editedItem)
         session.commit()
         flash("Item Edited!")
-        return redirect(url_for('listSupplyItems', category_id = category_id))
+        return redirect(url_for('listSupplyItems', category_id=category_id))
     else:
-        return render_template('editSupplyItem.html', 
-            category_id = category_id, item_id = item_id, item = editedItem )
+        return render_template(
+            'editSupplyItem.html',
+            category_id=category_id,
+            item_id=item_id,
+            item=editedItem
+            )
+
 
 # PAGE FOR DELETING AN EXISTING SUPPLY ITEM GIVEN A CATEGORY.
 # LOGIN REQUIRED
-@app.route('/catsupplies/<int:category_id>/<int:item_id>/delete/', 
-           methods = ['GET', 'POST'])
+@app.route('/catsupplies/<int:category_id>/<int:item_id>/delete/',
+           methods=['GET', 'POST'])
 @login_required
 def deleteSupplyItem(category_id, item_id):
     """
-    This function lets a logged-in user delete an existing item given 
-    a category and saves changes to the database catsupplies.db. 
-    Input : category_id and item_id 
+    This function lets a logged-in user delete an existing item given
+    a category and saves changes to the database catsupplies.db.
+    Input : category_id and item_id
     """
-    deletedItem = session.query(SupplyItem).filter_by(id = item_id).one()
+    deletedItem = session.query(SupplyItem).filter_by(id=item_id).one()
     if login_session['user_id'] != category.user_id:
         return "<script>function myFunction() {alert('You are not authorized to delete supply items to this category.');}</script><body onload='myFunction()''>"
     if request.method == 'POST':
         session.delete(deletedItem)
         session.commit()
         flash("Item Deleted!")
-        return redirect(url_for('listSupplyItems', category_id = category_id))
+        return redirect(url_for('listSupplyItems', category_id=category_id))
     else:
-        return render_template('deleteSupplyItem.html', 
-            category_id = category_id, item_id = item_id, deletedItem = deletedItem)
+        return render_template(
+            'deleteSupplyItem.html',
+            category_id=category_id,
+            item_id=item_id,
+            deletedItem=deletedItem
+            )
 
 
 # ADD JSON API ENDPOINT
 @app.route('/catsupplies/items/JSON')
 def allItemsJSON():
     items = session.query(SupplyItem).all()
-    return jsonify(SupplyItems = [i.serialize for i in items])
-    
+    return jsonify(SupplyItems=[i.serialize for i in items])
+
+
 @app.route('/catsupplies/<int:category_id>/items/JSON')
 def supplyItemJSON(category_id):
-    category = session.query(Category).filter_by(id = category_id).one()
+    category = session.query(Category).filter_by(id=category_id).one()
     items = session.query(SupplyItem).filter_by(
-        category_id = category_id).all()
-    return jsonify(SupplyItems = [i.serialize for i in items])
+        category_id=category_id).all()
+    return jsonify(SupplyItems=[i.serialize for i in items])
 
 
 if __name__ == '__main__':
