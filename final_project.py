@@ -1,13 +1,14 @@
-from flask import Flask, render_template, redirect, url_for, request, jsonify, flash, g
+# IMPORTS FOR FLASK FRAME WORKS
+from flask import Flask, render_template, redirect, url_for, request, jsonify, flash
+# IMPORTS FOR DATABASE
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database_setup import Base, Category, SupplyItem
-
-
+from database_setup import Base, Category, SupplyItem, User
 # IMPORTS FOR LOGIN
 from flask import session as login_session
 import random
 import string
+# IMPORTS FOR LOGIN -- GCONNECT FUNCTION
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 import httplib2
@@ -19,7 +20,7 @@ from functools import wraps
 
 app = Flask(__name__)
 
-
+# READ AND SAVE CLIENT_ID FOR GOOGLE PLUS LOGIN FUNCTIONALITY
 CLIENT_ID = json.loads(
     open('client_secrets.json', 'r').read())['web']['client_id']
 APPLICATION_NAME = "Cat Supplies Catalog App"
@@ -27,6 +28,12 @@ APPLICATION_NAME = "Cat Supplies Catalog App"
 # Create anti-forgery state token
 @app.route('/login')
 def showLogin():
+    """ 
+    This function creates random string for login, state token.
+    The variable is stored in login_session dictionary. 
+
+    """
+
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
                     for x in xrange(32))
     login_session['state'] = state
@@ -36,11 +43,19 @@ def showLogin():
 
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
+    """ 
+    This function enables a google plus login by a user.
+    More specifically, it validates all the credentials and
+    if everything is validated then proceed to successful login.
+
+    """
+    
     # Validate state token
     if request.args.get('state') != login_session['state']:
         response = make_response(json.dumps('Invalid state parameter.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
+
     # Obtain authorization code
     code = request.data
 
@@ -61,6 +76,7 @@ def gconnect():
            % access_token)
     h = httplib2.Http()
     result = json.loads(h.request(url, 'GET')[1])
+
     # If there was an error in the access token info, abort.
     if result.get('error') is not None:
         response = make_response(json.dumps(result.get('error')), 500)
@@ -119,6 +135,11 @@ def gconnect():
 # DISCONNECT - Revoke a current user's token and reset their login_session
 @app.route('/gdisconnect')
 def gdisconnect():
+    """ 
+    This function enables a user to logout from the web app.
+    After logout, the user is redirected to the main page 
+    and will see a flash message.
+    """
         # Only disconnect a connected user.
     credentials = login_session.get('credentials')
     if credentials is None:
@@ -127,6 +148,8 @@ def gdisconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
     access_token = credentials
+    print access_token
+
     url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % access_token
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
@@ -154,6 +177,9 @@ def gdisconnect():
 
 # DECORATOR FUNCTION FOR LOGIN REQUIREMENT. REDIRECT TO LOGIN PAGE
 def login_required(f):
+    """
+    Decorator function -- check login status and redirect to login page. 
+    """
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if login_session['username'] is None:
@@ -174,14 +200,23 @@ session = DBSession()
 # MAIN PAGE GENERATOR -- SHOWS CATEGORIES OF SUPPLIES
 @app.route('/catsupplies/')
 def listCategories():
+    """
+    This function generates the main page, '/catsupplies'.
+    The main page contains login/out buttons.
+    """
     categories = session.query(Category).all()
-
-    return render_template('categories.html', categories = categories, name = login_session['username'])
+    return render_template('categories.html', categories = categories, 
+                            login_session = login_session)
 
 # PAGE FOR CREATING A NEW CATEGORY. REQUIRES LOGIN
 @app.route('/catsupplies/new/', methods = ['GET', 'POST'])
 @login_required
 def newCategory():
+    """
+    This function lets a logged-in user generate a new category and saves to 
+    the database catsupplies.db. 
+    """
+
     if request.method == 'POST':
         if request.form['name']:
             newCategory = Category(name = request.form['name'])
@@ -196,6 +231,10 @@ def newCategory():
 @app.route('/catsupplies/<int:category_id>/edit/', methods = ['GET', 'POST'])
 @login_required
 def editCategory(category_id):
+    """
+    This function lets a logged-in user edit an existing category and 
+    saves changes to the database catsupplies.db. 
+    """
     editedCategory = session.query(Category).filter_by(id = category_id).one()
     if request.method == 'POST':
         if request.form['name']:
@@ -212,6 +251,10 @@ def editCategory(category_id):
 @app.route('/catsupplies/<int:category_id>/delete', methods = ['GET', 'POST'])
 @login_required
 def deleteCategory(category_id):
+    """
+    This function lets a logged-in user delete an existing category and 
+    saves changes to the database catsupplies.db. 
+    """
     deletedCategory = session.query(Category).filter_by(id = category_id).one()
     if request.method == 'POST':
         session.delete(deletedCategory)
@@ -225,6 +268,10 @@ def deleteCategory(category_id):
 # GENERATING PAGE FOR EACH CATEGORY -- LIST ALL THE SUPPLY ITEMS
 @app.route('/catsupplies/<int:category_id>/')
 def listSupplyItems(category_id):
+    """
+    This function lists all the supply items saved in catsupplies.db
+    given a category_id on the page "item.html".
+    """
     category = session.query(Category).filter_by(id=category_id).one()
     items = session.query(SupplyItem).filter_by(category_id=category.id)
 
@@ -234,6 +281,11 @@ def listSupplyItems(category_id):
 @app.route('/catsupplies/<int:category_id>/new/', methods = ['GET', 'POST'])
 @login_required
 def newSupplyItem(category_id):
+    """
+    This function lets a logged-in user create a new item given 
+    a category and saves changes to the database catsupplies.db. 
+    Input : category_id
+    """
     if request.method == 'POST':
         newItem = SupplyItem(name = request.form['name'], brand = "brand", 
             price = "$"+request.form['price'], category_id = category_id)
@@ -250,6 +302,11 @@ def newSupplyItem(category_id):
            methods = ['GET', 'POST'])
 @login_required
 def editSupplyItem(category_id, item_id):
+    """
+    This function lets a logged-in user edit an existing item given 
+    a category and saves changes to the database catsupplies.db. 
+    Input : category_id and item_id 
+    """
     editedItem = session.query(SupplyItem).filter_by(id = item_id).one()
     if request.method == 'POST':
         if request.form['name']:
@@ -272,6 +329,11 @@ def editSupplyItem(category_id, item_id):
            methods = ['GET', 'POST'])
 @login_required
 def deleteSupplyItem(category_id, item_id):
+    """
+    This function lets a logged-in user delete an existing item given 
+    a category and saves changes to the database catsupplies.db. 
+    Input : category_id and item_id 
+    """
     deletedItem = session.query(SupplyItem).filter_by(id = item_id).one()
     if request.method == 'POST':
         session.delete(deletedItem)

@@ -30,6 +30,7 @@ a:hover {
 .header {
 	display: inline-block; 
 	float:right;
+	font-size: 1.2em;
 }
 
 .pane {
