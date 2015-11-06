@@ -2,7 +2,7 @@
 import os.path
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database_setup import Category, Base, SupplyItem
+from database_setup import Category, Base, SupplyItem, User
 
 # Q: how do we make sure that we are not adding the same item in 
 # the existing database? Do we use "unique" key in db rather than the followng?
@@ -25,51 +25,56 @@ DBSession = sessionmaker(bind=engine)
 # session.rollback()
 session = DBSession()
 
-category1 = Category(name="Wet Food")
+
+user1 = User(name="Hyomin Choi", email = "hyomin.choi@gmail.com")
+session.add(user1)
+session.commit()
+
+category1 = Category(name="Wet Food", user_id=1)
 
 session.add(category1)
 session.commit()
 
-category2 = Category(name="Treats")
+category2 = Category(name="Treats", user_id=1 )
 
 session.add(category2)
 session.commit()
 
-category3 = Category(name="Supplements")
+category3 = Category(name="Supplements",user_id=1)
 
 session.add(category3)
 session.commit()
 
 item1 = SupplyItem(name="Beef Liver Munchies", brand="Primal", price="$5",
-				   grain_free=True, ingredients="beef liver", category=category2)
+				   grain_free=True, ingredients="beef liver", category=category2, user_id=1)
 
 session.add(item1)
 session.commit()
 
 item2 = SupplyItem(name="Hairball Relief", brand="Vet's Best", price="$5.5",
 				   grain_free=True, ingredients="yeast, papaya, slippery elm bark",
-				   category=category3)
+				   category=category3, user_id=1)
 
 session.add(item2)
 session.commit()
 
 item3 = SupplyItem(name="Nu-Cat", brand="VetriScience", price="$13", 
 				   ingredients="cehydrated beef liver, taurine, green mussel", 
-				   category=category3)
+				   category=category3, user_id=1)
 
 session.add(item3)
 session.commit()
 
 item4 = SupplyItem(name="Cat Man Doo Chiken", brand="Cat Man Doo", price="$14",
 				   grain_free=True, ingredients="dehydrated chicken breast",
-				   category=category2)
+				   category=category2, user_id=1)
 
 session.add(item4)
 session.commit()
 
 item5 = SupplyItem(name="Puka Luau Succulent Chicken in Chicken Consomme Canned Cat Food",
 				   brand="Tiki Cat", ingredients="Chicken 62%, Chicken Consomme 34%",
-				   price="$20",category=category1)
+				   price="$20",category=category1, user_id=1)
 
 session.add(item5)
 session.commit()
