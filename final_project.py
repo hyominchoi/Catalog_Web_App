@@ -227,7 +227,7 @@ def login_required(f):
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'username' not in login_session:
+        if 'user_id' not in login_session:
             return redirect(url_for('showLogin', next=request.url))
         return f(*args, **kwargs)
     return decorated_function
@@ -251,7 +251,7 @@ def listCategories():
     The main page contains login/out buttons.
     """
     categories = session.query(Category).all()
-    if 'username' not in login_session:
+    if 'user_id' not in login_session:
         return render_template('public_categories.html', categories=categories,
                                login_session=login_session)
     else:
@@ -315,7 +315,8 @@ def deleteCategory(category_id):
     saves changes to the database catsupplies.db.
     """
     CategoryToDelete = session.query(Category).filter_by(id=category_id).one()
-    if CategoryToDelete.user_id != login_session[user_id]:
+    print CategoryToDelete
+    if CategoryToDelete.user_id != login_session['user_id']:
         return "<script>function myFunction() {alert('You are not authorized to delete this category. Please create your own category in order to delete.');}</script><body onload='myFunction()''>"
     if request.method == 'POST':
         session.delete(CategoryToDelete)
@@ -340,7 +341,7 @@ def listSupplyItems(category_id):
     category = session.query(Category).filter_by(id=category_id).one()
     creator = getUserInfo(category.user_id)
     items = session.query(SupplyItem).filter_by(category_id=category.id)
-    if 'username' not in login_session or creator.id != login_session['user_id']:
+    if 'user_id' not in login_session or creator.id != login_session['user_id']:
         return render_template(
             'public_item.html',
             category=category,

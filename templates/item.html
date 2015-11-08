@@ -7,7 +7,7 @@
 <body>
 	<h1>{{category.name}}</h1>
 		<div class="header" > 
-		{% if not login_session['username'] %}
+		{% if not login_session['user_id'] %}
     	<a href= '{{ url_for('showLogin') }}'> Sign in </a>
   		{% else %}
   		<a href="{{url_for('gdisconnect')}}">Sign out</a>
