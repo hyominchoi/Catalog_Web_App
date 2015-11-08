@@ -59,7 +59,8 @@ session.add(item2)
 session.commit()
 
 item3 = SupplyItem(name="Nu-Cat", brand="VetriScience", price="$13", 
-				   ingredients="cehydrated beef liver, taurine, green mussel", 
+				   ingredients="cehydrated beef liver, taurine, green mussel",
+				   image_url="http://www.vetriscience.com/images/products/large_0900567.008.jpg", 
 				   category=category3, user_id=1)
 
 session.add(item3)

@@ -10,11 +10,13 @@
 
 	<form action = '{{url_for('editSupplyItem', category_id = category_id, item_id = item.id) }}' method = 'post'>
 	<b> Name:</b>
-	<input type = 'text' size = '30' name = 'name', placeholder = '{{item.name}}'>
+	<input type = 'text' size = '30' name = 'name', value = '{{item.name}}'>
 	<b> Price:</b>
-	<input type = 'integer' size = '10' name = 'price' placeholder ='{{item.price}}'> </br> </br>
+	<input type = 'integer' size = '10' name = 'price' value ='{{item.price}}'> </br> </br>
 	<b> Ingredients: </b>
-	<input type = 'text' size = '100' name = 'ingredients' placeholder = '{{item.ingredients}}'> </br> </br>
+	<input type = 'text' size = '100' name = 'ingredients' value = '{{item.ingredients}}'> </br> </br>
+	<b> Image URL: </b>
+	<input type = 'text' size ='100' name ='image_url' value ='{{item.image_url}}'></br></br>
 	<input type = 'submit' value = 'Edit'>
 	</form>
 	

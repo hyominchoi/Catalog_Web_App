@@ -29,15 +29,14 @@
 	
 	<div class="pane">
 		{% for i in items %}
-
+		<div class="img">
+		<img src = "{{i.image_url}}" alt = "image not available" width = "100px" ></div>  
 		<p class = "name">{{i.name}} </p> 
 		<p class = "price"> {{i.price}} </p> 
 		<p class = "ingredients"> {{i.ingredients}} 
 		...created by {{creator.name}}
 		</p>
 		</br>
-
-
 		{% endfor %}
 		</br></br>
 		<a href = '{{url_for('showLogin')}}'> Log in to create, edit, or delete items</a>

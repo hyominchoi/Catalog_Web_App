@@ -10,7 +10,7 @@
 	<form action = '{{url_for('editCategory', category_id = category_id) }}' method = 'post'>
 
 	<b> Name:</b>
-	<input type = 'text' size = '30' name = 'name', placeholder = '{{editedCategory.name}}'>
+	<input type = 'text' size = '30' name = 'name', value = '{{editedCategory.name}}'>
 	<input type = 'submit' value = 'Edit'>
 	</form>
 	

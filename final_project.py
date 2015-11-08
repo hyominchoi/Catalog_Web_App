@@ -375,6 +375,7 @@ def newSupplyItem(category_id):
             name=request.form['name'],
             brand="brand",
             price="$"+request.form['price'],
+            image_url=request.form['image_url'],
             category_id=category_id,
             user_id=category.user_id
             )
@@ -408,6 +409,8 @@ def editSupplyItem(category_id, item_id):
             editedItem.ingredients = request.form['ingredients']
         if request.form['price']:
             editedItem.price = request.form['price']
+        if request.form['image_url']:
+            editedItem.image_url = request.form['image_url']
         session.add(editedItem)
         session.commit()
         flash("Item Edited!")
