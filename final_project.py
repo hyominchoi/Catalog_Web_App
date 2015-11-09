@@ -2,6 +2,7 @@
 from flask import Flask, render_template, redirect, url_for, request, flash
 # IMPORTS FOR API ENDPOINTS
 from flask import jsonify
+import xml.etree.ElementTree as ET
 # IMPORTS FOR DATABASE
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -193,7 +194,6 @@ def gdisconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
     access_token = credentials
-    print access_token
 
     url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % access_token
     h = httplib2.Http()
@@ -289,7 +289,7 @@ def editCategory(category_id):
     This function lets a logged-in user edit an existing category and
     saves changes to the database catsupplies.db.
     """
-    editedCategory = session.query(Category).filter_by(id=category_id).one()
+    editedCategory = session.query(Category).get(category_id)
     if editedCategory.user_id != login_session['user_id']:
         return "<script>function myFunction() {alert('You are not authorized to edit this categroy. Please create your own category in order to edit.');}</script><body onload='myFunction()''>"
     if request.method == 'POST':
@@ -315,12 +315,11 @@ def deleteCategory(category_id):
     This function lets a logged-in user delete an existing category and
     saves changes to the database catsupplies.db.
     """
-    CategoryToDelete = session.query(Category).filter_by(id=category_id).one()
-    print CategoryToDelete
-    if CategoryToDelete.user_id != login_session['user_id']:
+    deletedCategory = session.query(Category).get(category_id)
+    if deletedCategory.user_id != login_session['user_id']:
         return "<script>function myFunction() {alert('You are not authorized to delete this category. Please create your own category in order to delete.');}</script><body onload='myFunction()''>"
     if request.method == 'POST':
-        session.delete(CategoryToDelete)
+        session.delete(deletedCategory)
         session.commit()
         flash("Category Deleted!")
         return redirect(url_for('listCategories'))
@@ -328,7 +327,7 @@ def deleteCategory(category_id):
         return render_template(
             'deleteCategory.html',
             category_id=category_id,
-            deletedCategory=CategoryToDelete
+            deletedCategory=deletedCategory
             )
 
 
@@ -339,7 +338,7 @@ def listSupplyItems(category_id):
     This function lists all the supply items saved in catsupplies.db
     given a category_id on the page "item.html".
     """
-    category = session.query(Category).filter_by(id=category_id).one()
+    category = session.query(Category).get(category_id)
     creator = getUserInfo(category.user_id)
     items = session.query(SupplyItem).filter_by(category_id=category.id)
     if 'user_id' not in login_session or creator.id != login_session['user_id']:
@@ -378,6 +377,7 @@ def newSupplyItem(category_id):
             brand="brand",
             price="$"+request.form['price'],
             image_url=request.form['image_url'],
+            ingredients=request.form['ingredients'],
             category_id=category_id,
             user_id=category.user_id
             )
@@ -400,8 +400,8 @@ def editSupplyItem(category_id, item_id):
     a category and saves changes to the database catsupplies.db.
     Input : category_id and item_id
     """
-    category = session.query(Category).filter_by(id=category_id).one()
-    editedItem = session.query(SupplyItem).filter_by(id=item_id).one()
+    category = session.query(Category).get(category_id)
+    editedItem = session.query(SupplyItem).get(item_id)
     if login_session['user_id'] != category.user_id:
         return "<script>function myFunction() {alert('You are not authorized to edit supply items to this category.');}</script><body onload='myFunction()''>"
     if request.method == 'POST':
@@ -437,7 +437,8 @@ def deleteSupplyItem(category_id, item_id):
     a category and saves changes to the database catsupplies.db.
     Input : category_id and item_id
     """
-    deletedItem = session.query(SupplyItem).filter_by(id=item_id).one()
+    category = session.query(Category).get(category_id)
+    deletedItem = session.query(SupplyItem).get(item_id)
     if login_session['user_id'] != category.user_id:
         return "<script>function myFunction() {alert('You are not authorized to delete supply items to this category.');}</script><body onload='myFunction()''>"
     if request.method == 'POST':
@@ -468,6 +469,13 @@ def supplyItemJSON(category_id):
         category_id=category_id).all()
     return jsonify(SupplyItems=[i.serialize for i in items])
 
+
+# ADD XML API ENDPOINT
+@app.route('/catsupplies/items/XML')
+def allItemsXML():
+    items = session.query(SupplyItem).all()
+    return render_template('items.xml',items=items)
+    
 
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'

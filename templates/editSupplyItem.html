@@ -11,7 +11,7 @@
 	<form action = '{{url_for('editSupplyItem', category_id = category_id, item_id = item.id) }}' method = 'post'>
 	<b> Name:</b>
 	<input type = 'text' size = '30' name = 'name', value = '{{item.name}}'>
-	<b> Price:</b>
+	<b> Price:</b> 
 	<input type = 'integer' size = '10' name = 'price' value ='{{item.price}}'> </br> </br>
 	<b> Ingredients: </b>
 	<input type = 'text' size = '100' name = 'ingredients' value = '{{item.ingredients}}'> </br> </br>
