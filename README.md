@@ -20,5 +20,5 @@ How to Run Project
 
 Miscellaneous
 -------------
-* Next goa: I want to add web-scrapping functionality to record the lowest possible prices from various websites.
+* Next goal: I want to add web-scrapping functionality to record the lowest possible prices from various websites.
 
